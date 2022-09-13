@@ -4,25 +4,44 @@ const Author = require('../models/Author');
 
 // ALL
 router.get('/', async (req, res) => {
-    
-    try {
-        
-        const users = await Author.find({});
-        console.log('users ' + users[0].name)
-        res.send(users)
-    } catch (error) {
-        console.log(error)
+    let searchOptions = {};
+    if (req.query.name != null && req.query.name !== ''){
+        searchOptions.name = new RegExp(req.query.name, 'i')
     }
-    // res.render('authors/index', users);
+    try {
+        const authors = await Author.find(searchOptions);
+
+        res.render('authors/index', { 
+            authors, searchOptions: req.query 
+        } );
+    } catch(err) {
+        res.redirect('/');
+    }
 });
+
 //new
 router.get('/new', (req, res) => {
-    res.render('authors/new', { author: new author() });
+    res.render('authors/new', { author: new Author() });
 });
+
 //create
-router.post('/', (req, res) => {
-    res.send('create')   
-});
+router.post('/', async (req, res) => {
+    const author = new Author({
+        name: req.body.name
+    })
+
+    try {
+        await author.save();
+        // res.redirect(`authors/${newAuthor.id}`)
+        res.redirect(`authors`)
+        
+    } catch (error) {
+        res.render('authors/new', {
+            author,
+            errorMessage: 'Error creating Author'
+        }) 
+    } 
+});    
 
 
 
